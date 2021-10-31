@@ -1,0 +1,4 @@
+comment = 'PostgreSQL Up Down Sequence'
+default_version = '0.0.1'
+relocatable = true
+module_pathname = '$libdir/generate_up_down_series'
