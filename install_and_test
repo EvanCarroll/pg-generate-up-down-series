@@ -7,7 +7,7 @@ sudo make install;
 psql <<EOF
 	\timing
 	SET jit=on;
-	SET work_mem="1MB";
+	-- SET work_mem="2MB";
 	DROP EXTENSION generate_up_down_series;
 	CREATE EXTENSION generate_up_down_series;
 
@@ -15,8 +15,8 @@ psql <<EOF
 	\set m 570
 	\set rows 2 * :n * :m
 
-	SELECT count(*) AS warm_up FROM (SELECT generate_up_down_series_evan(:n,:m)) AS t;
-	SELECT count(*) AS warm_up FROM (
+	SELECT count(*) AS warm_up_evan FROM (SELECT generate_up_down_series_evan(:n,:m)) AS t;
+	SELECT count(*) AS warm_up_verace FROM (
 		WITH cte AS ( SELECT ARRAY(SELECT GENERATE_SERIES(1, :n)) AS arr)
 		SELECT UNNEST (
 			( SELECT ARRAY_CAT(c.arr, SORT(c.arr, 'DESC')) FROM cte c)
@@ -31,7 +31,8 @@ psql <<EOF
 	\echo
 
 	\echo VERACE_QUERY [number to beat]
-	SELECT count(*) FROM (
+	SELECT count(*)
+	FROM (
 		WITH cte AS ( SELECT ARRAY(SELECT GENERATE_SERIES(1, :n)) AS arr)
 		SELECT UNNEST (
 			( SELECT ARRAY_CAT(c.arr, SORT(c.arr, 'DESC')) FROM cte c)
@@ -40,18 +41,30 @@ psql <<EOF
 	\echo
 	\echo
 
+	\echo XXXXXXXXXXXXXXXXXXXXXXXX
 	\echo XXXXX VALUEPERCALL XXXXX
+	\echo XXXXXXXXXXXXXXXXXXXXXXXX
 	\echo SELECT count(*) FROM (SELECT generate_series(1,:rows)) AS t;
 	      SELECT count(*) FROM (SELECT generate_series(1,:rows)) AS t;
 	
+	\echo
 	\echo SELECT count(*) FROM (SELECT generate_up_down_series_evan(:n,:m)) AS t;
 	      SELECT count(*) FROM (SELECT generate_up_down_series_evan(:n,:m)) AS t;
 	
+	--\echo
+	--\echo SELECT count(*) FROM (SELECT generate_up_down_series_1(:n,:m)) AS t;
+	--      SELECT count(*) FROM (SELECT generate_up_down_series_1(:n,:m)) AS t;
+	
 
+	\echo
+	\echo
+	\echo XXXXXXXXXXXXXXXXXXXXXXXX
 	\echo XXXXX MATERIALIZED XXXXX
+	\echo XXXXXXXXXXXXXXXXXXXXXXXX
 	\echo SELECT count(*) FROM (SELECT * FROM generate_series(1,:rows)) AS t;
 	      SELECT count(*) FROM (SELECT * FROM generate_series(1,:rows)) AS t;
 	
+	\echo
 	\echo SELECT count(*) FROM (SELECT * FROM generate_up_down_series_evan(:n,:m)) AS t;
 	      SELECT count(*) FROM (SELECT * FROM generate_up_down_series_evan(:n,:m)) AS t;
 EOF
